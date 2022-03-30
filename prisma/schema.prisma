@@ -23,5 +23,6 @@ model Speaker{
   standup Standup @relation(fields: [standupId], references: [id])
   standupId String
   queuePosition Int
+  accepted Boolean
   spokeOut Boolean
 }

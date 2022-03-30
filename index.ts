@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import { PrismaClient } from '@prisma/client'
+import { addPotentialSpeakers, addStandup } from './helpers';
 
 const prisma = new PrismaClient()
 
@@ -26,13 +27,8 @@ const testPrisma = async () => {
 
 client.on('ready', async ()=>{
     console.log('The bot is ready');
-    console.log('lets get all server members');
-    // const Guilds = client.guilds.cache.map(guild => guild.id);
-    // console.log(Guilds);
-    const guild = client.guilds.cache.get('957371843218649148');
-    guild!.members.cache.forEach(member => console.log(member.user)); 
-    // console.log(guild!.members);
-
+    //addStandup();
+    addPotentialSpeakers(client);
     new WOKCommands(client, {
         commandDir: path.join(__dirname, 'commands'),
         typeScript: true,

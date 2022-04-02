@@ -5,6 +5,8 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient();
 
 
+const emojiRepresentationForNumbers = ['1️⃣', '2️⃣', '3️⃣', '4️⃣'];
+
 const addButton = (
     components: (DiscordJS.MessageActionRow | (Required<DiscordJS.BaseMessageComponentOptions> & DiscordJS.MessageActionRowOptions))[],
     customId: string,
@@ -23,6 +25,38 @@ const addButton = (
     )
 
     components.push(row);
+}
+
+
+const enqueueById = async (
+    components: (DiscordJS.MessageActionRow | (Required<DiscordJS.BaseMessageComponentOptions> & DiscordJS.MessageActionRowOptions))[],
+    userId: string,
+    userName: string,
+    queuePositing: number,
+    customId: string
+    ) =>{
+    const allSpeaker = await prisma.speaker.findMany();
+    await prisma.speaker.update({
+        where: {
+            id: userId,
+        },
+        data: {
+            queuePosition: queuePositing,
+        },
+      })
+    let i = 0; 
+
+    for (i; i< components.length; i++){
+        // @ts-ignore
+        if (customId === components[i].components[0].customId){
+            // @ts-ignore
+            components[i].components[0].label = userName;
+             // @ts-ignore
+            components[i].components[0].style = 'SUCCESS';
+        }
+    }
+
+
 }
 
 
@@ -50,58 +84,43 @@ export default {
     let componentsColumn: (DiscordJS.MessageActionRow | (Required<DiscordJS.BaseMessageComponentOptions> & DiscordJS.MessageActionRowOptions))[] = [];
 
     if (interaction) {
-      
-      addButton(componentsColumn , `accept_meeting`,'❓', `подтвердите свое учатие в стендапе`, 'SECONDARY');
+        
+        allSpeaker.forEach((speaker, index)=>{
+            addButton(componentsColumn , `queue_placeholder_${index}`,emojiRepresentationForNumbers[index], `здесь могли бы быть вы`, 'SECONDARY');
+          });
 
       await interaction.reply({
-        content: 'Initialize unaccepted buttons',
+        content: 'Выбор порядка выступления',
         components: componentsColumn,
-        ephemeral: true,
       });
       }
 
       const collector = channel.createMessageComponentCollector({
-        max: 10,
-        time: 1000 * 20
+        max: 100,
+        time: 1000 * 60
       });
 
       collector.on('collect', async (i: ButtonInteraction)=>{
-          console.log(`the button is clicked by user with id  ${i.user.id}`);
-          // await i.reply({
-          //   content: `the button is clicked by user with id  ${i.user.id}`,
-          //   ephemeral: true
-          // })
-
+        console.log(`buttin with id ${i.customId} is clicked by ${i.user.id}`);
+        enqueueById(
+            componentsColumn,
+            i.user.id,
+            i.user.username,
+            Number(i.customId.split('_')[2]+1),
+            i.customId
+            );
+        await i.reply({
+            content: `Вы выбрали выступать ${Number(i.customId.split('_')[2]+1)}`, 
+            ephemeral: true
+          });
           await interaction.editReply({
-            content: `the button is clicked by user with id  ${i.user.id}`,
+            content: `edited reply`, 
             components: componentsColumn,
           });
-
-        //   if (i.user.id === i.customId.split('_')[3]){
-        //   // TODO: use as CustomInterface instead of @ts-ignore
-        //   // @ts-ignore
-        //   const currentUser = componentsColumn.filter(component => component.components[0]?.customId.split('_')[3] === interaction.user.id);
-        //    // @ts-ignore
-        //   componentsColumn = componentsColumn.filter(component => component.components[0]?.customId.split('_')[3] !== i.user.id);
-        //   // @ts-ignore
-        //   addButton(componentsColumn, currentUser[0].components[0]?.customId, '✅', `${currentUser[0].components[0]?.label.split(',')[0]} подтвердил участие`, 'SUCCESS');
-        //   await interaction.editReply({
-        //     content: 'Someone click on button',
-        //     components: componentsColumn
-        //   });
-        // }
-
       });
 
       collector.on('end', async (collection)=>{
-        // collection.forEach((click)=>{
-        //   console.log(click.user.id, click.customId);
-        // });
 
-        await interaction.editReply({
-          content: 'the end of 10 sec.',
-          components: componentsColumn,
-        });
       });
   }
 } as ICommand;

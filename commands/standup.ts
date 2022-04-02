@@ -27,12 +27,14 @@ const addButton = (
 
 
 const client = new DiscordJS.Client({
-  intents: [ Intents.FLAGS.GUILDS,
+  intents: [ 
+       Intents.FLAGS.GUILDS,
        Intents.FLAGS.GUILD_MESSAGES, 
        Intents.FLAGS.GUILD_MEMBERS,
        Intents.FLAGS.GUILD_PRESENCES
       ],
 })
+
 import { addPotentialSpeakers, addSpeaker, addStandup } from '../helpers';
 
 export default {
@@ -49,61 +51,47 @@ export default {
 
     if (interaction) {
       
-      allSpeaker.forEach((speaker, index)=>{
-        console.log(componentsColumn, `accept_for_userId_${speaker.id}`,'❓', `${speaker.name}, подтвердите свое присутствие`, 'SECONDARY');
+      allSpeaker.forEach((speaker)=>{
         addButton(componentsColumn , `accept_for_userId_${speaker.id}`,'❓', `${speaker.name}, подтвердите свое присутствие`, 'SECONDARY');
       });
 
       await interaction.reply({
-        content: 'Here is buttons',
+        content: 'Initialize unaccepted buttons',
         components: componentsColumn
       });
       }
 
-      const filter = (interaction: ButtonInteraction) =>{
-        return interaction.user.id === interaction.user.id;
-      }
-
       const collector = channel.createMessageComponentCollector({
-        max: allSpeaker.length,
-        time: 1000 * 5
+        max: 2,
+        time: 1000 * 20
       });
 
-      collector.on('collect', (i: ButtonInteraction)=>{
-        i.reply({
-          content: 'You clicked a button',
-        })
+      collector.on('collect', async (i: ButtonInteraction)=>{
+          console.log(`you accepted meeting by ${i.user.id}`);
+          console.log(`the clicked button is ${i.customId}`);
+          if (i.user.id === i.customId.split('_')[3]){
+          // TODO: use as CustomInterface instead of @ts-ignore
+          // @ts-ignore
+          const currentUser = componentsColumn.filter(component => component.components[0]?.customId.split('_')[3] === interaction.user.id);
+           // @ts-ignore
+          componentsColumn = componentsColumn.filter(component => component.components[0]?.customId.split('_')[3] !== i.user.id);
+          // @ts-ignore
+          addButton(componentsColumn, currentUser[0].components[0]?.customId, '✅', `${currentUser[0].components[0]?.label.split(',')[0]} подтвердил участие`, 'SUCCESS');
+          await interaction.editReply({
+            content: 'Someone click on button',
+            components: componentsColumn
+          });
+        }
+
       });
 
       collector.on('end', async (collection)=>{
-        collection.forEach((click)=>{
-          console.log(click.user.id, click.customId);
-        });
-
-        if (collection.first()?.customId ===`accept_for_userId_${interaction.user.id}`){
-            console.log('you accepted meeting !');
-            // TODO: use as CustomInterface instead of @ts-ignore
-            // @ts-ignore
-            const currentUser = componentsColumn.filter(component => component.components[0]?.customId.split('_')[3] === interaction.user.id);
-             // @ts-ignore
-            componentsColumn = componentsColumn.filter(component => component.components[0]?.customId.split('_')[3] !== interaction.user.id);
-            // addButton(componentsColumn , `accept_for_userId_${speaker.id}`,'❓', `${speaker.name}, подтвердите свое присутствие`, 'SECONDARY');
-            // @ts-ignore
-            console.log('interaction.user.id is :')
-            console.log(interaction.user.id);
-            console.log('currentUser is :')
-              // @ts-ignore
-            console.log(currentUser[0].components[0]);
-            // console.log(componentsColumn, `accept_for_userId_${speaker.id}`,'❓', `${speaker.name}, подтвердите свое присутствие`, 'SECONDARY');
-            // @ts-ignore
-            addButton(componentsColumn, currentUser[0].components[0]?.customId, '✅', `${currentUser[0].components[0]?.label.split(',')[0]} подтвердил участие`, 'SUCCESS');
-        }else{
-          console.log('you cant accept someone elses meeting !');
-        }
-
+        // collection.forEach((click)=>{
+        //   console.log(click.user.id, click.customId);
+        // });
 
         await interaction.editReply({
-          content: 'action has already been taken.',
+          content: 'the end of 10 sec.',
           components: componentsColumn,
         });
       });

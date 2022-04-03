@@ -45,3 +45,7 @@ export const addPotentialSpeakers = async (client: DiscordJS.Client<boolean>)=>{
         }
     }); 
 }
+
+export const standupMaster = () =>{
+    
+}

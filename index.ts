@@ -2,10 +2,11 @@ import DiscordJS, {Intents} from 'discord.js';
 import WOKCommands from 'wokcommands';
 import path from 'path';
 import dotenv from 'dotenv';
+const cron = require('node-cron');
 dotenv.config();
 
 import { PrismaClient } from '@prisma/client'
-import { addPotentialSpeakers, addStandup } from './helpers';
+import { addPotentialSpeakers, addStandup, standupMaster } from './helpers';
 
 const prisma = new PrismaClient()
 
@@ -30,7 +31,7 @@ client.on('ready', async ()=>{
         commandDir: path.join(__dirname, 'commands'),
         typeScript: true,
         testServers: ['957371843218649148'],
-    })
+    });
 });
 
 

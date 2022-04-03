@@ -66,37 +66,13 @@ export default {
       });
 
       collector.on('collect', async (i: ButtonInteraction)=>{
-          console.log(`the button is clicked by user with id  ${i.user.id}`);
-          // await i.reply({
-          //   content: `the button is clicked by user with id  ${i.user.id}`,
-          //   ephemeral: true
-          // })
-
           await interaction.editReply({
             content: `the button is clicked by user with id  ${i.user.id}`,
             components: componentsColumn,
           });
-
-        //   if (i.user.id === i.customId.split('_')[3]){
-        //   // TODO: use as CustomInterface instead of @ts-ignore
-        //   // @ts-ignore
-        //   const currentUser = componentsColumn.filter(component => component.components[0]?.customId.split('_')[3] === interaction.user.id);
-        //    // @ts-ignore
-        //   componentsColumn = componentsColumn.filter(component => component.components[0]?.customId.split('_')[3] !== i.user.id);
-        //   // @ts-ignore
-        //   addButton(componentsColumn, currentUser[0].components[0]?.customId, '✅', `${currentUser[0].components[0]?.label.split(',')[0]} подтвердил участие`, 'SUCCESS');
-        //   await interaction.editReply({
-        //     content: 'Someone click on button',
-        //     components: componentsColumn
-        //   });
-        // }
-
       });
 
       collector.on('end', async (collection)=>{
-        // collection.forEach((click)=>{
-        //   console.log(click.user.id, click.customId);
-        // });
 
         await interaction.editReply({
           content: 'the end of 10 sec.',

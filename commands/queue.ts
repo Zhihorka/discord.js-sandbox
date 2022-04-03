@@ -36,6 +36,27 @@ const enqueueById = async (
     customId: string
     ) =>{
     const allSpeaker = await prisma.speaker.findMany();
+
+
+    let positionAlreadyTaken = false;
+
+    allSpeaker.forEach(speaker=>{
+        if (speaker.queuePosition === queuePositing){
+            positionAlreadyTaken = true;
+        };
+    })
+
+    const currentUser = await prisma.speaker.findUnique({
+        where: {
+          id: userId,
+        },
+      })
+
+
+    if (!positionAlreadyTaken){
+
+
+
     await prisma.speaker.update({
         where: {
             id: userId,
@@ -55,8 +76,9 @@ const enqueueById = async (
             components[i].components[0].style = 'SUCCESS';
         }
     }
-
-
+    return true;
+}
+return false;
 }
 
 
@@ -93,22 +115,21 @@ export default {
         content: 'Выбор порядка выступления',
         components: componentsColumn,
       });
-      }
 
       const collector = channel.createMessageComponentCollector({
         max: 100,
-        time: 1000 * 60
+        time: 1000 * 30
       });
 
       collector.on('collect', async (i: ButtonInteraction)=>{
-        console.log(`buttin with id ${i.customId} is clicked by ${i.user.id}`);
-        enqueueById(
+        const successEnqued = await enqueueById(
             componentsColumn,
             i.user.id,
             i.user.username,
             Number(i.customId.split('_')[2]+1),
             i.customId
             );
+        if (successEnqued){
         await i.reply({
             content: `Вы выбрали выступать ${Number(i.customId.split('_')[2]+1)}`, 
             ephemeral: true
@@ -117,10 +138,19 @@ export default {
             content: `edited reply`, 
             components: componentsColumn,
           });
+        }else{
+          await i.reply({
+            content: `Другой пользователь уже занял это место !`, 
+            ephemeral: true
+          });
+        }
       });
 
       collector.on('end', async (collection)=>{
-
+        await interaction.editReply({
+          content: 'Время отведенное на голосование завершилось',
+        });
       });
+    }
   }
 } as ICommand;

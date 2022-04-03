@@ -20,13 +20,10 @@ const client = new DiscordJS.Client({
 
 const testPrisma = async () => {
         const allStandups = await prisma.speaker.findMany();
-        console.log('lets look into ');
-        console.log(allStandups);
 }
 
 
 client.on('ready', async ()=>{
-    console.log('The bot is ready');
     // addStandup();
     // addPotentialSpeakers(client);
     new WOKCommands(client, {

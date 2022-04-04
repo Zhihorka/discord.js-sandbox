@@ -25,8 +25,8 @@ const testPrisma = async () => {
 
 
 client.on('ready', async ()=>{
-    // addStandup();
-    // addPotentialSpeakers(client);
+    // await addStandup();
+    // await addPotentialSpeakers(client);
     new WOKCommands(client, {
         commandDir: path.join(__dirname, 'commands'),
         typeScript: true,

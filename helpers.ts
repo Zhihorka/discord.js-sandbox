@@ -6,10 +6,15 @@ const prisma = new PrismaClient()
 
 export const addStandup = async () =>{
     
+    const today = new Date().toISOString().split('T');
+    
+
     await prisma.standup.create({
         data:{
             id: '0',
-            date: new Date().toISOString()
+            statusChecked: false,
+            queued: false,
+            date: new Date(today[0]+'T13:30')
         }
     });
 };
@@ -37,11 +42,9 @@ export const addSpeaker = async (
 
 export const addPotentialSpeakers = async (client: DiscordJS.Client<boolean>)=>{
     const guild = await client.guilds.cache.get('957371843218649148');
-    let i: number = 1;
     guild!.members.cache.forEach((member) => {
         if (member.user.bot === false){
-        addSpeaker(member.user.id, member.user.username, '0', i , false , false);
-        i++
+        addSpeaker(member.user.id, member.user.username, '0', 0 , false , false);
         }
     }); 
 }

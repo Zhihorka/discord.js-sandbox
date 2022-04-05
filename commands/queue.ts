@@ -5,7 +5,7 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient();
 
 
-const emojiRepresentationForNumbers = ['1️⃣', '2️⃣', '3️⃣', '4️⃣'];
+const emojiRepresentationForNumbers = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣'];
 
 const addButton = (
     components: (DiscordJS.MessageActionRow | (Required<DiscordJS.BaseMessageComponentOptions> & DiscordJS.MessageActionRowOptions))[],
@@ -104,9 +104,21 @@ export default {
     const allSpeaker = await prisma.speaker.findMany();
 
     let componentsColumn: (DiscordJS.MessageActionRow | (Required<DiscordJS.BaseMessageComponentOptions> & DiscordJS.MessageActionRowOptions))[] = [];
+    
+    const isStatusChecked = await prisma.standup.findUnique({
+      where: {
+        id: '0',
+      },
+    });
+    if (!isStatusChecked!.statusChecked){
+      interaction.reply({
+        content: 'Сначала вым нужно выполнить команду /statsCheck'
+      })
+    }
 
-    if (interaction) {
-        
+    if (isStatusChecked!.statusChecked) {
+      console.log(isStatusChecked!.statusChecked);
+
         allSpeaker.forEach((speaker, index)=>{
             addButton(componentsColumn , `queue_placeholder_${index}`,emojiRepresentationForNumbers[index], `здесь могли бы быть вы`, 'SECONDARY');
           });
@@ -122,16 +134,29 @@ export default {
       });
 
       collector.on('collect', async (i: ButtonInteraction)=>{
+        const currentUser = await prisma.speaker.findUnique({
+          where: {
+            id: i.user.id,
+          }
+        });
+
+        if (currentUser!.queuePosition !== 0){
+          await i.reply({
+            content: `Вы уже выбрали свою очередь`, 
+            ephemeral: true
+          });
+        }else{
+
         const successEnqued = await enqueueById(
             componentsColumn,
             i.user.id,
             i.user.username,
-            Number(i.customId.split('_')[2]+1),
+            (Number(i.customId.split('_')[2])+1),
             i.customId
             );
         if (successEnqued){
         await i.reply({
-            content: `Вы выбрали выступать ${Number(i.customId.split('_')[2]+1)}`, 
+            content: `Вы выбрали выступать ${Number(i.customId.split('_')[2])+1}`, 
             ephemeral: true
           });
           await interaction.editReply({
@@ -144,12 +169,11 @@ export default {
             ephemeral: true
           });
         }
+      }
       });
 
       collector.on('end', async (collection)=>{
-        await interaction.editReply({
-          content: 'Время отведенное на голосование завершилось',
-        });
+        await interaction.deleteReply();
       });
     }
   }

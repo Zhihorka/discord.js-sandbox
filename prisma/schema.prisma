@@ -14,6 +14,8 @@ datasource db {
 model Standup{
   id String @id @default(cuid())
   date DateTime
+  statusChecked Boolean
+  queued Boolean
   speakers Speaker[]
 }
 

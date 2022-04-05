@@ -41,27 +41,35 @@ export default {
       });
     }
 
-    console.log(queuedSpeakers);
-
     let componentsColumn: (
       | DiscordJS.MessageActionRow
       | (Required<DiscordJS.BaseMessageComponentOptions> &
           DiscordJS.MessageActionRowOptions)
     )[] = [];
 
+    const passToNextButton = new MessageActionRow()
+    .addComponents(
+        new MessageButton()
+        .setCustomId('pass_to_next_user')
+        .setEmoji('➡️')
+        .setLabel('Передать следующему')
+        .setStyle('SECONDARY')
+    )
+
+    componentsColumn.push(passToNextButton);
+
     if (interaction) {
       if (index + 1 === queuedSpeakers.length) {
         await interaction.reply({
-          content: `Заканчивает стендап ${queuedSpeakers[index].name}
-          } готовится`,
-          components: componentsColumn,
+          content: `Заканчивает стендап ${queuedSpeakers[index].name}`,
+          components: componentsColumn, 
         });
       } else if (index + 1 === queuedSpeakers.length - 1) {
         await interaction.reply({
           content: `Сейчас выступает ${queuedSpeakers[index].name}, ${
             queuedSpeakers[index + 1].name
           } замыкает стендап`,
-          components: componentsColumn,
+          components: componentsColumn
         });
       } else {
         await interaction.reply({
@@ -74,10 +82,37 @@ export default {
 
       const collector = channel.createMessageComponentCollector({
         max: 99,
-        time: 1000 * 999,
+        time: 1000 * 120,
       });
 
-      collector.on("collect", async (i: ButtonInteraction) => {});
+      collector.on("collect", async (i: ButtonInteraction) => {
+          if (i.user.id === queuedSpeakers[index].id){
+              index++;
+              if (index=== queuedSpeakers.length-1){
+              await interaction.editReply({
+                content: `Заканчивает стендап ${queuedSpeakers[index].name}`,
+              });
+            }else if (index=== queuedSpeakers.length-2){
+                await interaction.editReply({
+                    content: `Сейчас выступает ${queuedSpeakers[index].name}, ${
+                      queuedSpeakers[index + 1].name
+                    } замыкает стендап`,
+                    components: componentsColumn
+                  });
+            }else{
+                await interaction.editReply({
+                    content: `Сейчас выступает ${queuedSpeakers[index].name}, ${
+                      queuedSpeakers[index + 1].name
+                    } готовится`,
+                    components: componentsColumn,
+                  });
+            }
+            await i.reply({
+                content: `Вы передали слово следующему выступающему`,
+                ephemeral: true
+              });
+          }
+      });
 
       collector.on("end", async (collection) => {
         await interaction.deleteReply();

@@ -67,7 +67,7 @@ export default {
 
       const collector = channel.createMessageComponentCollector({
         max: 10,
-        time: 1000 * 20
+        time: 1000 * 120
       });
 
       collector.on('collect', async (i: ButtonInteraction)=>{
